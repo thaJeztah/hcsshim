@@ -305,6 +305,12 @@ func (process *process) CloseStdin() error {
 	title := "HCSShim::Process::" + operation
 	logrus.Debugf(title+" processid=%d", process.processID)
 
+	// If the process has already been closed, the Stdin handle is also closed
+	if process.handle == 0 {
+		logrus.Debugf(title+" the process handle (and hence Stdin pipe) is already closed processid=%d", process.processID)
+		return nil
+	}
+
 	modifyRequest := processModifyRequest{
 		Operation: modifyCloseHandle,
 		CloseHandle: &closeHandle{
@@ -341,6 +347,7 @@ func (process *process) Close() error {
 
 	// Don't double free this
 	if process.handle == 0 {
+		logrus.Debugf(title+" the process handle is already closed processid=%d", process.processID)
 		return nil
 	}
 
